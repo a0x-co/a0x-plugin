@@ -1,0 +1,21 @@
+{
+  "name": "a0x",
+  "version": "0.1.0",
+  "description": "A0X collective brain and Base ecosystem mentor plugin for OpenClaw",
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  },
+  "dependencies": {
+    "@sinclair/typebox": "^0.34.48"
+  },
+  "openclaw": {
+    "extensions": [
+      "./index.ts"
+    ]
+  },
+  "devDependencies": {
+    "@types/node": "^25.2.2",
+    "typescript": "^5.9.3"
+  }
+}

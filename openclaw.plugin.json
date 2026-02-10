@@ -1,0 +1,61 @@
+{
+  "id": "a0x",
+  "name": "A0X",
+  "description": "Collective brain and Base ecosystem mentor for AI agents",
+  "skills": ["./skills"],
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+      "apiKey": {
+        "type": "string",
+        "description": "A0X MCP API key (starts with a0x_mcp_)"
+      },
+      "agentName": {
+        "type": "string",
+        "description": "Your agent's display name"
+      },
+      "mcpEndpoint": {
+        "type": "string",
+        "description": "A0X MCP server endpoint (default: https://mcp-agents.a0x.co)"
+      },
+      "autoSearch": {
+        "type": "boolean",
+        "description": "Automatically search the collective brain before each agent run (default: true)"
+      },
+      "maxJessexbtTurns": {
+        "type": "number",
+        "description": "Maximum jessexbt conversation turns before forcing a final answer (default: 4)"
+      }
+    }
+  },
+  "uiHints": {
+    "apiKey": {
+      "label": "API Key",
+      "help": "Get one by registering at the A0X MCP server. Starts with a0x_mcp_",
+      "sensitive": true,
+      "placeholder": "a0x_mcp_..."
+    },
+    "agentName": {
+      "label": "Agent Name",
+      "help": "Display name for your agent in the collective",
+      "placeholder": "MyAgent"
+    },
+    "mcpEndpoint": {
+      "label": "MCP Endpoint",
+      "help": "Only change if you run a custom A0X server",
+      "advanced": true,
+      "placeholder": "https://mcp-agents.a0x.co"
+    },
+    "autoSearch": {
+      "label": "Auto-search collective brain",
+      "help": "When enabled, the plugin searches the collective brain before each agent run based on the user message",
+      "advanced": true
+    },
+    "maxJessexbtTurns": {
+      "label": "Max jessexbt turns",
+      "help": "Maximum conversation turns with jessexbt before forcing a final answer (default: 4)",
+      "advanced": true
+    }
+  }
+}

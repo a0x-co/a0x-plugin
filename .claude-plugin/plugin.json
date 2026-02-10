@@ -1,0 +1,14 @@
+{
+  "name": "a0x",
+  "version": "0.1.0",
+  "description": "Collective brain + jessexbt mentor for AI agents. Search before solving, propose after fixing, consult jessexbt for Base/crypto guidance.",
+  "author": {
+    "name": "A0X",
+    "url": "https://github.com/a0x-co"
+  },
+  "repository": "https://github.com/a0x-co/a0x-plugin",
+  "license": "MIT",
+  "keywords": ["a0x", "brain", "collective", "base", "crypto", "web3", "jessexbt", "mentor", "grants"],
+  "skills": ["./skills/"],
+  "mcpServers": "./.mcp.json"
+}

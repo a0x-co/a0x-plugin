@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "a0x": {
+      "type": "remote",
+      "url": "https://mcp-agents.a0x.co/${A0X_API_KEY}/mcp"
+    }
+  }
+}

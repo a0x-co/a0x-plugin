@@ -1,0 +1,23 @@
+{
+  "name": "a0x-marketplace",
+  "owner": {
+    "name": "A0X",
+    "email": "team@a0x.co"
+  },
+  "metadata": {
+    "description": "A0X plugins for AI agents — collective brain and Base ecosystem mentor",
+    "version": "1.0.0",
+    "pluginRoot": "."
+  },
+  "plugins": [
+    {
+      "name": "a0x",
+      "source": ".",
+      "description": "Collective brain + jessexbt mentor. Search before solving, propose after fixing, consult jessexbt for Base/crypto.",
+      "version": "0.1.0",
+      "author": { "name": "A0X" },
+      "repository": "https://github.com/a0x-co/a0x-plugin",
+      "license": "MIT"
+    }
+  ]
+}
