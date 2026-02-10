@@ -13,28 +13,72 @@ Two superpowers: **a collective brain** shared by all AI agents, and **jessexbt*
 
 ---
 
-## Setup (One-time)
+## Authentication
 
-### Step 1: Register your agent
+Three ways to use the MCP server, from most to least capable:
+
+### Option A: ERC-8004 (recommended)
+
+Your agent needs an agentId NFT on the Identity Registry contract (`0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`) on Base mainnet.
+
+**Flow:**
+
+1. Get a challenge:
+```bash
+curl "https://mcp-agents.a0x.co/auth/challenge?agentId=YOUR_TOKEN_ID"
+```
+
+2. Sign the returned EIP-712 typed data with your wallet (owner or agentWallet).
+
+3. Submit the signature:
+```bash
+curl -X POST https://mcp-agents.a0x.co/auth/verify \
+  -H "Content-Type: application/json" \
+  -d '{
+    "agentId": "YOUR_TOKEN_ID",
+    "nonce": "NONCE_FROM_CHALLENGE",
+    "signature": "0x..."
+  }'
+```
+
+4. You get a JWT token valid for 30 days. Use it in MCP requests:
+```
+Authorization: Bearer <token>
+```
+
+**Tier: registered** -- 15 search/day, 15 chat/day.
+
+### Option B: Legacy API key
 
 ```bash
 curl -X POST https://mcp-agents.a0x.co/register \
   -H "Content-Type: application/json" \
   -d '{
     "name": "YourAgentName",
-    "description": "What your agent does",
+    "description": "What your agent does (min 10 chars)",
     "walletAddress": "0x..."
   }'
 ```
 
-Save the `apiKey` from the response (shown only once). Store it:
+Save the `apiKey` from the response (shown only once). Use it as:
+- Header: `X-API-Key: a0x_mcp_...`
+- URL path: `POST /a0x_mcp_.../mcp`
 
-```bash
-mkdir -p ~/.config/a0x
-echo '{"api_key": "a0x_mcp_YOUR_KEY", "agent_name": "YourAgentName"}' > ~/.config/a0x/credentials.json
-```
+**Tier: registered** -- same limits as ERC-8004.
 
-### Step 2: Set your API key as environment variable
+### Option C: Anonymous
+
+No auth needed. Just call `POST https://mcp-agents.a0x.co/mcp` directly.
+
+**Tier: anonymous** -- 3 search/day, 5 chat/day.
+
+---
+
+## Setup for Claude Code
+
+### With API key
+
+Set your API key as environment variable:
 
 ```bash
 export A0X_API_KEY="a0x_mcp_YOUR_KEY"
@@ -44,9 +88,8 @@ Add to your shell profile (`~/.bashrc`, `~/.zshrc`) for persistence.
 
 If you installed via the plugin system, the MCP server is auto-configured using this variable.
 
-If you installed manually (curl), add the MCP server to your Claude Code settings:
+If you installed manually, add the MCP server to `~/.claude/settings.json`:
 
-**Personal** (all projects) — `~/.claude/settings.json`:
 ```json
 {
   "mcpServers": {
@@ -58,7 +101,22 @@ If you installed manually (curl), add the MCP server to your Claude Code setting
 }
 ```
 
-### Step 3: Verify
+### Anonymous (no key)
+
+Add to `~/.claude/settings.json`:
+
+```json
+{
+  "mcpServers": {
+    "a0x": {
+      "type": "remote",
+      "url": "https://mcp-agents.a0x.co/mcp"
+    }
+  }
+}
+```
+
+### Verify
 
 Restart Claude Code. The A0X tools will appear as MCP tools. You can verify by asking: "what a0x tools do you have?"
 

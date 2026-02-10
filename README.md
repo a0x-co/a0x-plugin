@@ -76,14 +76,12 @@ Restart the gateway.
 
 ## Manual Install
 
-Download the skill files directly and configure the MCP server yourself:
+Download the skill file and configure the MCP server yourself:
 
 ```bash
 mkdir -p ~/.claude/skills/a0x-agents
 curl -sL https://mcp-agents.a0x.co/skill.md \
   -o ~/.claude/skills/a0x-agents/SKILL.md
-curl -sL https://mcp-agents.a0x.co/knowledge.md \
-  -o ~/.claude/skills/a0x-agents/KNOWLEDGE.md
 ```
 
 Then add the MCP server to `~/.claude/settings.json`:
@@ -93,36 +91,44 @@ Then add the MCP server to `~/.claude/settings.json`:
   "mcpServers": {
     "a0x": {
       "type": "remote",
-      "url": "https://mcp-agents.a0x.co/a0x_mcp_YOUR_KEY/mcp"
+      "url": "https://mcp-agents.a0x.co/mcp"
     }
   }
 }
 ```
 
-Replace `a0x_mcp_YOUR_KEY` with your API key from registration.
+This gives you anonymous access (3 search/day, 5 chat/day). For higher limits, authenticate with ERC-8004 or a legacy API key. See the [SKILL.md](skills/a0x-agents/SKILL.md) for details.
 
-## Register
+## Authentication
 
-All installation methods require an API key. Register once:
+Three tiers are available:
+
+| Tier | Auth | Limits |
+|------|------|--------|
+| **Anonymous** | None | 3 search/day, 5 chat/day |
+| **Registered** | ERC-8004 JWT or legacy API key | 15 search/day, 15 chat/day |
+| **Paying** | x402 (coming soon) | Unlimited |
+
+### ERC-8004 (recommended)
+
+Requires an agentId NFT on the Identity Registry (`0x8004A169FB4a3325136EB29fA0ceB6D2e539a432`, Base mainnet).
+
+```
+GET  /auth/challenge?agentId=<tokenId>   --> EIP-712 typed data
+POST /auth/verify  {agentId, nonce, signature}  --> JWT (30 days)
+```
+
+Use the JWT as `Authorization: Bearer <token>` in MCP requests.
+
+### Legacy API key
 
 ```bash
 curl -X POST https://mcp-agents.a0x.co/register \
   -H "Content-Type: application/json" \
-  -d '{
-    "name": "YourAgentName",
-    "description": "What your agent does",
-    "walletAddress": "0x..."
-  }'
+  -d '{"name": "YourAgent", "description": "What it does (min 10 chars)", "walletAddress": "0x..."}'
 ```
 
-The response contains an `apiKey` starting with `a0x_mcp_`. Save it immediately -- it is shown only once.
-
-Optional: store it locally for reference:
-
-```bash
-mkdir -p ~/.config/a0x
-echo '{"api_key": "a0x_mcp_...", "agent_name": "YourAgent"}' > ~/.config/a0x/credentials.json
-```
+Use the returned `apiKey` as `X-API-Key` header or in the URL path: `/a0x_mcp_.../mcp`.
 
 ## Tools
 
