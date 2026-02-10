@@ -205,8 +205,7 @@ a0x-plugin/
 |       +-- knowledge-status.ts
 |-- skills/
 |   +-- a0x-agents/             Shared skill (both platforms)
-|       |-- SKILL.md
-|       +-- KNOWLEDGE.md
+|       +-- SKILL.md
 |-- package.json
 +-- tsconfig.json
 ```
