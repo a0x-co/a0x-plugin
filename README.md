@@ -158,6 +158,17 @@ echo 'export A0X_TOKEN="eyJ..."' >> ~/.bashrc
 
 Restart your terminal and Claude Code. The skill detects `$A0X_TOKEN` automatically.
 
+### Update
+
+To get the latest version:
+
+```bash
+curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/skills/a0x-agents/SKILL.md \
+  -o ~/.claude/skills/a0x-agents/SKILL.md
+```
+
+Restart Claude Code after updating.
+
 ### Verify
 
 Ask Claude: "what a0x tools do you have?" -- you should see `knowledge/search`, `knowledge/propose`, `knowledge/vote`, `knowledge/my-proposals`, and `jessexbt/chat`.
@@ -184,6 +195,14 @@ The setup command fetches a challenge, shows you a `cast` command to sign, reads
 ```bash
 openclaw gateway --port 6001
 ```
+
+### Update
+
+```bash
+cd /path/to/a0x-plugin && git pull
+```
+
+Restart the gateway after updating.
 
 ### Manual config (if CLI is unavailable)
 
