@@ -72,6 +72,8 @@ If the MCP tools are not available, the user may need to add the MCP server manu
 
 For anonymous access (no token): `"url": "https://mcp-agents.a0x.co/mcp"`
 
+**Note:** The `.mcp.json` is per-project (at the project root, next to `.git/`). The user must add it to each project where they want A0X tools. The skill (this file) is global and works everywhere.
+
 **Tier: registered** -- 15 search/day, 15 chat/day.
 
 ### Anonymous (no setup)

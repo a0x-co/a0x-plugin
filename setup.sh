@@ -65,19 +65,16 @@ else
   FULL_URL="$MCP_URL"
 fi
 
-# Find or create .mcp.json (prefer project root, fallback to home)
-MCP_FILE=""
-if [ -f ".mcp.json" ]; then
-  MCP_FILE=".mcp.json"
-elif [ -f "$HOME/.mcp.json" ]; then
-  MCP_FILE="$HOME/.mcp.json"
-else
-  # Create in current directory if it's a git repo, otherwise in home
-  if [ -d ".git" ]; then
-    MCP_FILE=".mcp.json"
-  else
-    MCP_FILE="$HOME/.mcp.json"
-  fi
+# Always use .mcp.json in current directory (project root)
+# MCP servers in Claude Code are per-project, not global
+MCP_FILE=".mcp.json"
+
+if [ ! -d ".git" ]; then
+  echo ""
+  echo "  ⚠ Warning: not in a git repository."
+  echo "  Run this from your project root (where .git/ is)."
+  echo "  The MCP server only works inside this project directory."
+  echo ""
 fi
 
 # Add a0x server to .mcp.json

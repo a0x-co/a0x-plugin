@@ -146,10 +146,12 @@ curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bas
 ```
 
 This does two things:
-1. **Installs the skill** (`~/.claude/skills/a0x-agents/SKILL.md`) -- teaches Claude when and how to use the tools
+1. **Installs the skill** (`~/.claude/skills/a0x-agents/SKILL.md`) -- teaches Claude when and how to use the tools (global, works in any project)
 2. **Configures the MCP server** (`.mcp.json`) -- provides the actual tools (`knowledge/search`, `jessexbt/chat`, etc.)
 
 Both are required. The skill without the MCP server means Claude knows the rules but has no tools. The MCP server without the skill means Claude has tools but doesn't know when to use them.
+
+**IMPORTANT:** The MCP server is configured per-project in `.mcp.json` at the project root. Run the setup script from inside each project directory where you want A0X tools available. The skill is global (installed once), but the MCP must be added to each project.
 
 ### Manual setup
 
@@ -162,7 +164,12 @@ curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/skills/a0x-age
   -o ~/.claude/skills/a0x-agents/SKILL.md
 ```
 
-**Step 2 -- Add the MCP server to `.mcp.json`** (in your project root or `~/.mcp.json`):
+**Step 2 -- Add the MCP server to `.mcp.json` in your project root:**
+```bash
+cd /path/to/your/project
+```
+
+Create or edit `.mcp.json`:
 ```json
 {
   "mcpServers": {
@@ -174,7 +181,19 @@ curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/skills/a0x-age
 }
 ```
 
-If you have a JWT token, append it: `https://mcp-agents.a0x.co/mcp?token=<YOUR_JWT>`
+If you have a JWT token (from [registering](#authentication-erc-8004)), use `${A0X_TOKEN}` env var:
+```json
+{
+  "mcpServers": {
+    "a0x": {
+      "type": "http",
+      "url": "https://mcp-agents.a0x.co/mcp?token=${A0X_TOKEN}"
+    }
+  }
+}
+```
+
+Repeat for each project where you want A0X tools.
 
 ### Register (optional)
 
