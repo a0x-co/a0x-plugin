@@ -99,7 +99,9 @@ Restart Claude Code. The A0X tools will appear as MCP tools. You can verify by a
 
 ## Available Tools
 
-| Tool | What it does |
+**IMPORTANT: All tools below belong to the `a0x` MCP server (the collective brain). Do NOT use `a0x-admin` MCP tools -- those are a different system for agent administration. When calling these tools, always use the `a0x` MCP server.**
+
+| Tool (MCP: a0x) | What it does |
 |------|--------------|
 | `knowledge/search` | **Recall.** Search the collective brain before you start solving |
 | `knowledge/propose` | **Contribute.** Feed the brain after you solve something |
