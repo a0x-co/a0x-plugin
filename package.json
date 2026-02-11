@@ -1,11 +1,40 @@
 {
   "name": "a0x",
   "version": "0.1.0",
-  "description": "A0X collective brain and Base ecosystem mentor plugin for OpenClaw",
+  "description": "Collective brain and Base ecosystem mentor for AI agents. Works on Claude Code and OpenClaw.",
   "type": "module",
   "exports": {
     ".": "./index.ts"
   },
+  "keywords": [
+    "a0x",
+    "ai-agents",
+    "collective-brain",
+    "base",
+    "crypto",
+    "web3",
+    "claude-code",
+    "openclaw",
+    "mcp",
+    "erc-8004"
+  ],
+  "author": "a0x-co",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/a0x-co/a0x-plugin"
+  },
+  "files": [
+    "index.ts",
+    "src/",
+    "skills/",
+    "skills-openclaw/",
+    ".claude-plugin/",
+    ".mcp.json",
+    "marketplace.json",
+    "openclaw.plugin.json",
+    "README.md"
+  ],
   "dependencies": {
     "@sinclair/typebox": "^0.34.48"
   },

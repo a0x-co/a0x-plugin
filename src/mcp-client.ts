@@ -1,4 +1,5 @@
 import type { PluginLogger } from "openclaw/plugin-sdk";
+import type { A0xAuth } from "./types.js";
 
 export interface McpToolCallParams {
   name: string;
@@ -12,7 +13,7 @@ export class A0xMcpClient {
 
   constructor(
     private baseUrl: string,
-    private apiKey: string,
+    private auth: A0xAuth,
     private logger?: PluginLogger
   ) {}
 
@@ -60,8 +61,13 @@ export class A0xMcpClient {
   private async callMcp(body: any): Promise<any> {
     const headers: Record<string, string> = {
       "Content-Type": "application/json",
-      "X-API-Key": this.apiKey
     };
+
+    if (this.auth.type === "jwt") {
+      headers["Authorization"] = `Bearer ${this.auth.token}`;
+    } else {
+      headers["X-API-Key"] = this.auth.key;
+    }
 
     if (this.sessionId) {
       headers["Mcp-Session-Id"] = this.sessionId;

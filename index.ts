@@ -19,7 +19,7 @@ import { createKnowledgeProposeTool } from "./src/tools/knowledge-propose.js";
 import { createKnowledgeSearchTool } from "./src/tools/knowledge-search.js";
 import { createKnowledgeMyProposalsTool } from "./src/tools/knowledge-status.js";
 import { createKnowledgeVoteTool } from "./src/tools/knowledge-vote.js";
-import type { A0xPluginConfig, JessexbtState, BrainState, PendingProposalsState } from "./src/types.js";
+import type { A0xPluginConfig, A0xAuth, JessexbtState, BrainState, PendingProposalsState } from "./src/types.js";
 import { DEFAULT_MCP_ENDPOINT } from "./src/types.js";
 
 /**
@@ -55,12 +55,24 @@ const configSchema: OpenClawPluginConfigSchema = {
         },
       };
     }
+    // Validate JWT format if provided
+    if (cfg.jwt && typeof cfg.jwt !== "string") {
+      return {
+        success: false,
+        error: {
+          issues: [{ path: ["jwt"], message: "jwt must be a string" }],
+        },
+      };
+    }
     return { success: true, data: value };
   },
   jsonSchema: {
     type: "object",
     additionalProperties: false,
     properties: {
+      agentId: { type: "string" },
+      jwt: { type: "string" },
+      jwtExpiresAt: { type: "string" },
       apiKey: { type: "string" },
       agentName: { type: "string" },
       mcpEndpoint: { type: "string" },
@@ -69,9 +81,24 @@ const configSchema: OpenClawPluginConfigSchema = {
     },
   },
   uiHints: {
+    agentId: {
+      label: "Agent ID",
+      help: "Your agent's token ID on the Identity Registry (0x8004...). Set by `openclaw a0x setup`.",
+      placeholder: "14513",
+    },
+    jwt: {
+      label: "JWT Token",
+      help: "JWT from ERC-8004 authentication (auto-set by `openclaw a0x setup`).",
+      sensitive: true,
+    },
+    jwtExpiresAt: {
+      label: "JWT Expiry",
+      help: "JWT expiration date (auto-set by setup).",
+      advanced: true,
+    },
     apiKey: {
-      label: "API Key",
-      help: 'Get one by registering at the A0X MCP server. Starts with "a0x_mcp_".',
+      label: "API Key (legacy)",
+      help: 'Legacy auth — use ERC-8004 instead. Starts with "a0x_mcp_".',
       sensitive: true,
       placeholder: "a0x_mcp_...",
     },
@@ -115,7 +142,118 @@ const plugin: OpenClawPluginDefinition = {
 
         root
           .command("setup")
-          .description("Register your agent and configure the A0X plugin")
+          .description("Authenticate your agent via ERC-8004 challenge-response")
+          .requiredOption("--agent-id <id>", "Your agent's token ID on the Identity Registry")
+          .option("-n, --name <name>", "Your agent's display name")
+          .option("--endpoint <url>", "Custom MCP endpoint", DEFAULT_MCP_ENDPOINT)
+          .action(async (options) => {
+            const endpoint = options.endpoint as string;
+            const agentId = options.agentId as string;
+            const name = (options.name as string | undefined) ?? `Agent-${agentId}`;
+
+            console.log(`\nAuthenticating agent ${agentId} via ERC-8004...\n`);
+
+            try {
+              // Step 1: Fetch challenge
+              const challengeRes = await fetch(
+                `${endpoint}/auth/challenge?agentId=${encodeURIComponent(agentId)}`,
+              );
+
+              if (!challengeRes.ok) {
+                const text = await challengeRes.text();
+                console.error(`Failed to get challenge (${challengeRes.status}): ${text}`);
+                process.exit(1);
+              }
+
+              const challenge = (await challengeRes.json()) as Record<string, unknown>;
+              const nonce = challenge.nonce as string;
+              const typedData = challenge.typedData as Record<string, unknown>;
+
+              if (!nonce || !typedData) {
+                console.error("Invalid challenge response:", JSON.stringify(challenge));
+                process.exit(1);
+              }
+
+              // Step 2: Show the cast command for signing
+              const typedDataJson = JSON.stringify(typedData);
+
+              console.log("Sign this challenge with your wallet using cast (Foundry):\n");
+              console.log("  With a private key:");
+              console.log(`  cast wallet sign-typed-data --private-key $PK --data '${typedDataJson}'\n`);
+              console.log("  With a hardware wallet (Ledger):");
+              console.log(`  cast wallet sign-typed-data --ledger --data '${typedDataJson}'\n`);
+
+              // Step 3: Read signature from stdin
+              const { createInterface } = await import("node:readline");
+              const rl = createInterface({ input: process.stdin, output: process.stdout });
+              const signature = await new Promise<string>((resolve) => {
+                rl.question("Paste the signature (0x...): ", (answer) => {
+                  rl.close();
+                  resolve(answer.trim());
+                });
+              });
+
+              if (!signature.startsWith("0x")) {
+                console.error("Invalid signature — must start with 0x");
+                process.exit(1);
+              }
+
+              // Step 4: Verify signature and get JWT
+              console.log("\nVerifying signature...");
+              const verifyRes = await fetch(`${endpoint}/auth/verify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ agentId, nonce, signature }),
+              });
+
+              if (!verifyRes.ok) {
+                const text = await verifyRes.text();
+                console.error(`Verification failed (${verifyRes.status}): ${text}`);
+                process.exit(1);
+              }
+
+              const verifyData = (await verifyRes.json()) as Record<string, unknown>;
+              const jwt = (verifyData.token ?? verifyData.jwt) as string | undefined;
+              const expiresAt = verifyData.expiresAt as string | undefined;
+
+              if (!jwt) {
+                console.error("Verification succeeded but no token returned:", JSON.stringify(verifyData));
+                process.exit(1);
+              }
+
+              console.log(`\n✅ Authenticated! JWT valid until ${expiresAt ?? "unknown"}\n`);
+
+              // Step 5: Save to openclaw.json
+              const updated = { ...config } as Record<string, unknown>;
+              const plugins = ((updated.plugins as Record<string, unknown>) ?? {});
+              const entries = ((plugins.entries as Record<string, unknown>) ?? {});
+              entries.a0x = {
+                enabled: true,
+                config: {
+                  agentId,
+                  agentName: name,
+                  jwt,
+                  jwtExpiresAt: expiresAt,
+                  mcpEndpoint: endpoint !== DEFAULT_MCP_ENDPOINT ? endpoint : undefined,
+                },
+              };
+              plugins.entries = entries;
+              updated.plugins = plugins;
+
+              api.runtime.config.writeConfigFile(updated);
+              console.log("✅ Config saved to openclaw.json");
+              console.log("\nRestart your gateway to activate A0X tools.");
+              console.log('Then try: "Search the A0X collective brain for Base gas estimation"');
+            } catch (err) {
+              console.error("Setup failed:", err instanceof Error ? err.message : String(err));
+              process.exit(1);
+            }
+          });
+
+        // Legacy setup command (register with API key)
+        root
+          .command("register")
+          .description("(Legacy) Register with API key instead of ERC-8004")
           .requiredOption("-n, --name <name>", "Your agent's display name")
           .option("-d, --description <desc>", "What your agent does", "OpenClaw AI agent")
           .option("-w, --wallet <address>", "Wallet address (0x...)")
@@ -146,7 +284,6 @@ const plugin: OpenClawPluginDefinition = {
               }
 
               const data = (await res.json()) as Record<string, unknown>;
-              // API returns { success, data: { apiKey, ... } }
               const nested = data.data as Record<string, unknown> | undefined;
               const apiKey = (nested?.apiKey ?? data.apiKey) as string | undefined;
 
@@ -157,7 +294,6 @@ const plugin: OpenClawPluginDefinition = {
 
               console.log(`\n✅ Registered! API Key: ${apiKey}\n`);
 
-              // Save to openclaw.json
               const updated = { ...config } as Record<string, unknown>;
               const plugins = ((updated.plugins as Record<string, unknown>) ?? {});
               const entries = ((plugins.entries as Record<string, unknown>) ?? {});
@@ -175,7 +311,6 @@ const plugin: OpenClawPluginDefinition = {
               api.runtime.config.writeConfigFile(updated);
               console.log("✅ API key saved to openclaw.json");
               console.log("\nRestart your gateway to activate A0X tools.");
-              console.log("Then try: \"Search the A0X collective brain for Base gas estimation\"");
             } catch (err) {
               console.error("Registration failed:", err instanceof Error ? err.message : String(err));
               process.exit(1);
@@ -286,30 +421,77 @@ AI clone of Jesse Pollak (Base founder). Your mentor for anything related to Bas
             const a0xEntry = entries?.a0x as Record<string, unknown> | undefined;
             const a0xConfig = a0xEntry?.config as Record<string, unknown> | undefined;
 
-            if (!a0xConfig?.apiKey) {
-              console.log("❌ A0X not configured. Run: openclaw a0x setup --name YourAgent");
+            if (!a0xConfig?.jwt && !a0xConfig?.apiKey) {
+              console.log("❌ A0X not configured. Run: openclaw a0x setup --agent-id <TOKEN_ID>");
               return;
             }
 
-            const key = a0xConfig.apiKey as string;
             console.log(`✅ A0X configured`);
             console.log(`   Agent: ${a0xConfig.agentName ?? "(unnamed)"}`);
-            console.log(`   API Key: ${key.slice(0, 12)}...${key.slice(-4)}`);
             console.log(`   Endpoint: ${a0xConfig.mcpEndpoint ?? DEFAULT_MCP_ENDPOINT}`);
             console.log(`   Auto-search: ${a0xConfig.autoSearch !== false ? "enabled" : "disabled"}`);
+
+            if (a0xConfig.jwt) {
+              console.log(`   Auth: ERC-8004 (agent ID: ${a0xConfig.agentId ?? "unknown"})`);
+              if (a0xConfig.jwtExpiresAt) {
+                const expires = new Date(a0xConfig.jwtExpiresAt as string);
+                const now = new Date();
+                if (expires <= now) {
+                  console.log(`   JWT: EXPIRED (${expires.toISOString()})`);
+                  console.log(`   Run: openclaw a0x setup --agent-id ${a0xConfig.agentId} to re-authenticate`);
+                } else {
+                  const daysLeft = Math.ceil((expires.getTime() - now.getTime()) / (24 * 60 * 60 * 1000));
+                  console.log(`   JWT: valid (${daysLeft} days remaining)`);
+                }
+              }
+            } else {
+              const key = a0xConfig.apiKey as string;
+              console.log(`   Auth: Legacy API key (${key.slice(0, 12)}...${key.slice(-4)})`);
+            }
           });
       },
       { commands: ["a0x"] },
     );
 
     // =========================================================================
-    // Tools — only register if API key is configured
+    // Tools — only register if auth is configured (JWT or API key)
     // =========================================================================
 
     const cfg = api.pluginConfig as A0xPluginConfig | undefined;
-    if (!cfg?.apiKey) {
+
+    // =========================================================================
+    // Resolve auth mode: JWT (primary) > API key (legacy) > none
+    // =========================================================================
+
+    let auth: A0xAuth | undefined;
+
+    if (cfg?.jwt) {
+      // Check JWT expiry
+      if (cfg.jwtExpiresAt) {
+        const expires = new Date(cfg.jwtExpiresAt);
+        if (expires <= new Date()) {
+          api.logger.warn(
+            `A0X: JWT expired. Run \`openclaw a0x setup --agent-id ${cfg.agentId}\` to re-authenticate.`,
+          );
+          // Don't register tools — fall through to CLI-only
+          return;
+        }
+        // Warn if expiring within 3 days
+        const threeDays = 3 * 24 * 60 * 60 * 1000;
+        if (expires.getTime() - Date.now() < threeDays) {
+          api.logger.warn(
+            `A0X: JWT expires soon. Run \`openclaw a0x setup --agent-id ${cfg.agentId}\` to renew.`,
+          );
+        }
+      }
+      auth = { type: "jwt", token: cfg.jwt };
+    } else if (cfg?.apiKey) {
+      auth = { type: "apiKey", key: cfg.apiKey };
+    }
+
+    if (!auth) {
       api.logger.warn(
-        "A0X plugin: no apiKey configured. Run `openclaw a0x setup --name YourAgent` to register.",
+        "A0X plugin: no auth configured. Run `openclaw a0x setup --agent-id <TOKEN_ID>` to authenticate.",
       );
       return;
     }
@@ -345,7 +527,7 @@ AI clone of Jesse Pollak (Base founder). Your mentor for anything related to Bas
 
     const mcpClient = new A0xMcpClient(
       cfg.mcpEndpoint || DEFAULT_MCP_ENDPOINT,
-      cfg.apiKey,
+      auth,
       api.logger
     );
 

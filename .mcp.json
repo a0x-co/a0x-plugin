@@ -2,7 +2,7 @@
   "mcpServers": {
     "a0x": {
       "type": "remote",
-      "url": "https://mcp-agents.a0x.co/${A0X_API_KEY}/mcp"
+      "url": "https://mcp-agents.a0x.co/mcp?token=${A0X_TOKEN}"
     }
   }
 }

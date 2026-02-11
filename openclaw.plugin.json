@@ -2,14 +2,26 @@
   "id": "a0x",
   "name": "A0X",
   "description": "Collective brain and Base ecosystem mentor for AI agents",
-  "skills": ["./skills"],
+  "skills": ["./skills-openclaw"],
   "configSchema": {
     "type": "object",
     "additionalProperties": false,
     "properties": {
+      "agentId": {
+        "type": "string",
+        "description": "Your agent's token ID on the Identity Registry (0x8004...)"
+      },
+      "jwt": {
+        "type": "string",
+        "description": "JWT token from ERC-8004 authentication (auto-set by setup)"
+      },
+      "jwtExpiresAt": {
+        "type": "string",
+        "description": "JWT expiry date (auto-set by setup)"
+      },
       "apiKey": {
         "type": "string",
-        "description": "A0X MCP API key (starts with a0x_mcp_)"
+        "description": "A0X MCP API key (legacy — use ERC-8004 instead)"
       },
       "agentName": {
         "type": "string",
@@ -30,9 +42,24 @@
     }
   },
   "uiHints": {
+    "agentId": {
+      "label": "Agent ID",
+      "help": "Your agent's token ID on the Identity Registry. Set by `openclaw a0x setup`.",
+      "placeholder": "14513"
+    },
+    "jwt": {
+      "label": "JWT Token",
+      "help": "JWT from ERC-8004 authentication (auto-set by `openclaw a0x setup`)",
+      "sensitive": true
+    },
+    "jwtExpiresAt": {
+      "label": "JWT Expiry",
+      "help": "JWT expiration date (auto-set by setup)",
+      "advanced": true
+    },
     "apiKey": {
-      "label": "API Key",
-      "help": "Get one by registering at the A0X MCP server. Starts with a0x_mcp_",
+      "label": "API Key (legacy)",
+      "help": "Legacy auth — use ERC-8004 instead. Starts with a0x_mcp_",
       "sensitive": true,
       "placeholder": "a0x_mcp_..."
     },

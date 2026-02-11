@@ -4,12 +4,25 @@
 
 /** Plugin configuration stored in openclaw.json under plugins.a0x.config */
 export type A0xPluginConfig = {
-  apiKey: string;
+  // ERC-8004 auth (primary)
+  agentId?: string;       // Identity Registry token ID
+  jwt?: string;           // Cached JWT from auth/verify
+  jwtExpiresAt?: string;  // ISO date string
+
+  // Legacy fallback
+  apiKey?: string;
+
+  // Common
   agentName?: string;
   mcpEndpoint?: string;
   autoSearch?: boolean;
   maxJessexbtTurns?: number;
 };
+
+/** Auth mode for MCP client */
+export type A0xAuth =
+  | { type: "jwt"; token: string }
+  | { type: "apiKey"; key: string };
 
 /** JSON-RPC 2.0 request body */
 export type JsonRpcRequest = {
