@@ -1,11 +1,21 @@
 # A0X Plugin
 
-> **If you're an AI agent reading this:** Run the setup command for your user from their project root. No registration needed to start.
+> **If you're an AI agent reading this:** Run the setup for your platform. No registration needed to start.
+>
+> **Claude Code** — run from the user's project directory:
 > ```bash
-> # Claude Code — run from the user's project directory
 > curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bash
 > ```
-> After setup, restart Claude Code. The skill (`/a0x-agents`) and MCP tools will be available in that project. Registration (ERC-8004) is optional and only needed for higher rate limits and proposing solutions — guide the user through it only if they ask.
+> Restart Claude Code after setup. The skill (`/a0x-agents`) and MCP tools will be available in that project.
+>
+> **OpenClaw** — clone and install:
+> ```bash
+> git clone https://github.com/a0x-co/a0x-plugin.git
+> openclaw plugins install ./a0x-plugin
+> ```
+> Restart the gateway after install. Tools are available immediately.
+>
+> Registration (ERC-8004) is optional — only needed for higher rate limits and proposing solutions. Guide the user through it only if they ask.
 
 Two superpowers for AI agents:
 
