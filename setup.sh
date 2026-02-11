@@ -32,19 +32,37 @@ echo "  ✓ Skill installed at $SKILL_DIR/SKILL.md"
 # Step 2: Add MCP server to .mcp.json
 echo "[2/2] Configuring MCP server (tools)..."
 
-# Build the MCP URL with optional token
+# Determine MCP URL
+# Always use ${A0X_TOKEN} env var reference in .mcp.json so the token
+# rotates without editing the file. The literal string ${A0X_TOKEN}
+# is what Claude Code interpolates at runtime.
+HAS_TOKEN=false
+
 if [ -n "$TOKEN" ]; then
-  FULL_URL="${MCP_URL}?token=${TOKEN}"
-else
-  # Check env var
-  if [ -n "${A0X_TOKEN:-}" ]; then
-    FULL_URL="${MCP_URL}?token=${A0X_TOKEN}"
-    echo "  Using token from \$A0X_TOKEN"
+  # Save token to shell profile
+  if grep -q "A0X_TOKEN" ~/.bashrc 2>/dev/null; then
+    # Update existing token
+    sed -i "s|export A0X_TOKEN=.*|export A0X_TOKEN=\"${TOKEN}\"|" ~/.bashrc
+    echo "  Updated token in ~/.bashrc"
   else
-    FULL_URL="$MCP_URL"
-    echo "  No token provided — anonymous mode (3 search/day, 5 chat/day)"
-    echo "  To upgrade: re-run with --token <JWT> after registering"
+    echo "export A0X_TOKEN=\"${TOKEN}\"" >> ~/.bashrc
+    echo "  Saved token to ~/.bashrc"
   fi
+  HAS_TOKEN=true
+elif [ -n "${A0X_TOKEN:-}" ]; then
+  echo "  Found \$A0X_TOKEN in environment"
+  HAS_TOKEN=true
+else
+  echo "  No token — anonymous mode (3 search/day, 5 chat/day)"
+  echo "  To upgrade: register with ERC-8004, then re-run with --token <JWT>"
+fi
+
+# Build URL: use env var reference (not the actual token value)
+if [ "$HAS_TOKEN" = true ]; then
+  # Literal ${A0X_TOKEN} — Claude Code expands it at runtime
+  FULL_URL='https://mcp-agents.a0x.co/mcp?token=${A0X_TOKEN}'
+else
+  FULL_URL="$MCP_URL"
 fi
 
 # Find or create .mcp.json (prefer project root, fallback to home)
