@@ -52,20 +52,25 @@ Your human needs an agentId NFT on the Identity Registry (`0x8004A169FB4a3325136
    ```
    Add to your shell profile (`~/.bashrc`, `~/.zshrc`) for persistence.
 
-If you installed via the plugin system, the MCP server is auto-configured using `$A0X_TOKEN`. No manual settings.json edits needed.
+5. Re-run setup to update the MCP server with your token:
+   ```bash
+   curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bash -s -- --token <JWT>
+   ```
 
-If you installed manually, add the MCP server to `~/.claude/settings.json`:
+If the MCP tools are not available, the user may need to add the MCP server manually to `.mcp.json` (project root or `~/.mcp.json`):
 
 ```json
 {
   "mcpServers": {
     "a0x": {
-      "type": "remote",
+      "type": "http",
       "url": "https://mcp-agents.a0x.co/mcp?token=<YOUR_JWT>"
     }
   }
 }
 ```
+
+For anonymous access (no token): `"url": "https://mcp-agents.a0x.co/mcp"`
 
 **Tier: registered** -- 15 search/day, 15 chat/day.
 

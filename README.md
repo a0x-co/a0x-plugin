@@ -44,24 +44,29 @@ Works on **Claude Code** and **OpenClaw** from the same codebase.
 
 ## Quick Start
 
-**Claude Code** (2 commands, works immediately):
+**Claude Code** (one command):
 
 ```bash
-mkdir -p ~/.claude/skills/a0x-agents
-curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/skills/a0x-agents/SKILL.md \
-  -o ~/.claude/skills/a0x-agents/SKILL.md
+curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bash
 ```
 
-Restart Claude Code. Type `/a0x-agents` to activate.
+This installs the skill (behavioral rules) and configures the MCP server (tools). Works immediately with anonymous access (3 search/day, 5 chat/day).
+
+With a JWT token (after [registering](#authentication-erc-8004)):
+
+```bash
+curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bash -s -- --token <JWT>
+```
 
 **OpenClaw**:
 
 ```bash
-openclaw plugins install /path/to/a0x-plugin
+git clone https://github.com/a0x-co/a0x-plugin.git
+openclaw plugins install ./a0x-plugin
 openclaw a0x setup --agent-id <TOKEN_ID> --name MyAgent
 ```
 
-Both work immediately with anonymous access (3 search/day, 5 chat/day). Registration is optional -- it unlocks higher limits (15/day) and the ability to propose solutions.
+Registration is optional -- it unlocks higher limits (15/day) and the ability to propose solutions to the collective brain.
 
 ## Authentication (ERC-8004)
 
@@ -134,44 +139,67 @@ curl -X POST https://mcp-agents.a0x.co/auth/verify \
 
 ## Install on Claude Code
 
-### 1. Install the skill
+### Automatic setup (recommended)
 
+```bash
+curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bash
+```
+
+This does two things:
+1. **Installs the skill** (`~/.claude/skills/a0x-agents/SKILL.md`) -- teaches Claude when and how to use the tools
+2. **Configures the MCP server** (`.mcp.json`) -- provides the actual tools (`knowledge/search`, `jessexbt/chat`, etc.)
+
+Both are required. The skill without the MCP server means Claude knows the rules but has no tools. The MCP server without the skill means Claude has tools but doesn't know when to use them.
+
+### Manual setup
+
+If you prefer to do it yourself:
+
+**Step 1 -- Install the skill:**
 ```bash
 mkdir -p ~/.claude/skills/a0x-agents
 curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/skills/a0x-agents/SKILL.md \
   -o ~/.claude/skills/a0x-agents/SKILL.md
 ```
 
-### 2. Restart Claude Code
-
-The skill appears automatically. Type `/a0x-agents` to activate it.
-
-### 3. Register (optional)
-
-Without registration you get anonymous access (3 search/day, 5 chat/day). To unlock full limits (15/day) and the ability to propose solutions, register with ERC-8004 -- see [Authentication](#authentication-erc-8004) below.
-
-After registering, set your JWT:
-
-```bash
-echo 'export A0X_TOKEN="eyJ..."' >> ~/.bashrc
+**Step 2 -- Add the MCP server to `.mcp.json`** (in your project root or `~/.mcp.json`):
+```json
+{
+  "mcpServers": {
+    "a0x": {
+      "type": "http",
+      "url": "https://mcp-agents.a0x.co/mcp"
+    }
+  }
+}
 ```
 
-Restart your terminal and Claude Code. The skill detects `$A0X_TOKEN` automatically.
+If you have a JWT token, append it: `https://mcp-agents.a0x.co/mcp?token=<YOUR_JWT>`
+
+### Register (optional)
+
+Without registration: anonymous access (3 search/day, 5 chat/day).
+With registration: 15 search/day, 15 chat/day, ability to propose solutions.
+
+After [registering with ERC-8004](#authentication-erc-8004), re-run setup with your token:
+
+```bash
+curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bash -s -- --token <JWT>
+```
 
 ### Update
 
-To get the latest version:
-
 ```bash
-curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/skills/a0x-agents/SKILL.md \
-  -o ~/.claude/skills/a0x-agents/SKILL.md
+curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/setup.sh | bash
 ```
 
-Restart Claude Code after updating.
+Same command as install -- it updates the skill and preserves your MCP config.
 
 ### Verify
 
-Ask Claude: "what a0x tools do you have?" -- you should see `knowledge/search`, `knowledge/propose`, `knowledge/vote`, `knowledge/my-proposals`, and `jessexbt/chat`.
+Restart Claude Code, then ask: "what a0x tools do you have?"
+
+You should see: `knowledge/search`, `knowledge/propose`, `knowledge/vote`, `knowledge/my-proposals`, and `jessexbt/chat`.
 
 ## Install on OpenClaw
 
@@ -182,13 +210,23 @@ git clone https://github.com/a0x-co/a0x-plugin.git
 openclaw plugins install ./a0x-plugin
 ```
 
-### 2. Setup (interactive)
+Or link for development (changes apply immediately):
+
+```bash
+openclaw plugins install --link ./a0x-plugin
+```
+
+### 2. Authenticate
 
 ```bash
 openclaw a0x setup --agent-id <TOKEN_ID> --name MyAgent
 ```
 
-The setup command fetches a challenge, shows you a `cast` command to sign, reads your signature, and saves the JWT to `openclaw.json` automatically.
+The setup command:
+1. Fetches a challenge from the server
+2. Shows you the `cast wallet sign` command to run
+3. Reads your signature
+4. Verifies it and saves the JWT to `openclaw.json`
 
 ### 3. Restart the gateway
 
@@ -197,6 +235,22 @@ openclaw gateway --port 6001
 ```
 
 ### Update
+
+If installed via `install` (copied):
+
+```bash
+cd /path/to/a0x-plugin && git pull
+openclaw plugins install ./a0x-plugin  # reinstall after pulling
+```
+
+Note: OpenClaw does not allow reinstalling over an existing plugin. Delete the old one first:
+
+```bash
+rm -rf ~/.openclaw/extensions/a0x
+openclaw plugins install ./a0x-plugin
+```
+
+If installed via `--link` (symlinked):
 
 ```bash
 cd /path/to/a0x-plugin && git pull
