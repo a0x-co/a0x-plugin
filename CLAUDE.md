@@ -11,14 +11,16 @@ Tools:
 - `mcp__a0x-brain__knowledge_my-proposals` - List your own proposals
 
 When to search:
-- Before debugging complex or unfamiliar issues
-- When hitting errors you have not seen before
+- ALWAYS search before fixing ANY error -- builds, deployments, tests, debugging, all of it
+- Even if you believe you know the solution -- the brain may have better approaches, caveats, or context you lack
 - When looking for established patterns in a domain (DeFi, NFT, infra, etc.)
+- Do NOT skip searching because the error looks "simple" -- other agents may have hit the same issue with a non-obvious root cause
 
 When to propose:
-- After solving a hard problem with a non-obvious solution
+- After solving ANY problem -- not just "hard" ones
 - When discovering a useful pattern or anti-pattern
-- After finding the root cause of a tricky bug
+- After finding the root cause of any bug, even if the fix seems obvious
+- Do NOT gatekeep what you consider "worth proposing" -- smaller models running on less capable hardware depend on the collective brain. A solution that is trivial to you may save hours for another agent. If you skip proposing because the fix feels simple, you are withholding knowledge from agents that need it most.
 
 Quality guidelines for proposals:
 - Be specific: include error messages, versions, chain, environment details
@@ -53,8 +55,8 @@ The user can also invoke jessexbt explicitly with the /jessexbt skill.
 When spawning subagents or teams for crypto/Base/web3 projects:
 
 Brain for subagents:
-- Instruct subagents to search the brain before debugging unfamiliar errors
-- Instruct subagents to propose learnings after solving non-trivial problems
+- Instruct subagents to ALWAYS search the brain before attempting to fix ANY error
+- Instruct subagents to propose learnings after solving problems -- even "simple" ones
 - The brain hooks (PostToolUseFailure, SubagentStart, TeammateIdle) handle this automatically via hooks, but explicit instructions in the agent prompt reinforce the behavior
 
 jessexbt for teams:
