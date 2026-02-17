@@ -100,9 +100,22 @@ cast send 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432 \
   --private-key $AGENT_PK
 ```
 
-7. If successful, tell the user: "Your onchain agent identity has been created. Tier upgraded to VERIFIED (200 req/day)."
+7. Extract the tokenId from the transaction receipt. Look for the Transfer event log topic:
+   - The `logs` array in the receipt will contain a Transfer event
+   - The tokenId is in `topic[3]` (the 4th topic), as a hex number
+   - Convert it to decimal: `cast --to-dec {HEX_TOKEN_ID}`
+   - If no logs visible, try: `cast receipt {TX_HASH} --rpc-url https://mainnet.base.org` and parse the logs
 
-8. Update `~/.claude/.a0x-wallet.json` with tier: "verified" and daily: 200
+8. Re-run the link-wallet flow (Step 3) but this time include the `tokenId` in the POST body:
+```
+curl -s -X POST "{BASE_URL}/link-wallet" \
+  -H "Content-Type: application/json" \
+  -d '{"walletAddress": "{WALLET_ADDRESS}", "signature": "{SIGNATURE}", "apiKey": "{API_KEY}", "nonce": "{NONCE}", "tokenId": {TOKEN_ID}}'
+```
+   - This verifies on-chain that the wallet owns the NFT and upgrades to VERIFIED tier
+   - If the response shows `tier: "verified"`, the upgrade was successful
+
+9. Update `~/.claude/.a0x-wallet.json` with tier: "verified", daily: 200, and tokenId from the mint
 
 ## Notes
 

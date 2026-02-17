@@ -190,10 +190,10 @@ if [ -z "$API_KEY" ] || [ "$API_KEY" = "null" ]; then
     TIER=$(echo "$RESPONSE" | jq -r '.data.tier')
     DAILY=$(echo "$RESPONSE" | jq -r '.data.rateLimit.daily')
 
-    # Save wallet info (include agent address if available)
+    # Save wallet info — use real agent address as walletAddress if available
     mkdir -p "$CONFIG_DIR"
     if [ -n "$AGENT_ADDRESS" ]; then
-      echo "$RESPONSE" | jq --arg addr "$AGENT_ADDRESS" '.data + {agentWalletAddress: $addr}' > "$WALLET_FILE"
+      echo "$RESPONSE" | jq --arg addr "$AGENT_ADDRESS" '.data | .walletAddress = $addr' > "$WALLET_FILE"
     else
       echo "$RESPONSE" | jq '.data' > "$WALLET_FILE"
     fi
