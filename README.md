@@ -131,6 +131,14 @@ After restarting Claude Code:
 2. Try: `/jessexbt`
 3. Trigger a Bash error to see the brain hook in action
 
+## Uninstall
+
+```bash
+curl -sL https://raw.githubusercontent.com/a0x-co/a0x-plugin/main/uninstall.sh | bash
+```
+
+Backs up your wallet to `~/.a0x-wallet-backup.json`, removes all skills, hooks, and config. Your `$AGENT_PK` stays in your shell profile -- remove it manually if needed.
+
 ## License
 
 MIT
