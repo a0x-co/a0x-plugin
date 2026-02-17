@@ -103,12 +103,32 @@ elif command -v cast &>/dev/null; then
   if [ -n "$NEW_PK" ] && [ -n "$NEW_ADDRESS" ]; then
     AGENT_ADDRESS="$NEW_ADDRESS"
 
-    # Save PK to shell profile
+    # Save PK to shell profile (BEFORE interactive guard so non-interactive shells load it)
     if [ -n "$SHELL_PROFILE" ]; then
       # Remove old AGENT_PK if exists
       grep -v "^export AGENT_PK=" "$SHELL_PROFILE" > "$SHELL_PROFILE.tmp" 2>/dev/null && \
         mv "$SHELL_PROFILE.tmp" "$SHELL_PROFILE"
-      echo "export AGENT_PK=$NEW_PK" >> "$SHELL_PROFILE"
+
+      # Find the interactive guard (case $- in) and insert BEFORE it
+      GUARD_LINE=$(grep -n 'case \$- in' "$SHELL_PROFILE" 2>/dev/null | head -1 | cut -d: -f1)
+      if [ -n "$GUARD_LINE" ]; then
+        # Insert before the comment line above the guard (or the guard itself)
+        INSERT_LINE=$((GUARD_LINE - 1))
+        # Check if previous line is a comment about interactivity
+        PREV=$(sed -n "${INSERT_LINE}p" "$SHELL_PROFILE" 2>/dev/null)
+        if echo "$PREV" | grep -qi "interactiv"; then
+          INSERT_LINE=$((INSERT_LINE - 1))
+        fi
+        # Insert after INSERT_LINE (0 = top of file)
+        if [ "$INSERT_LINE" -le 0 ]; then
+          INSERT_LINE=1
+        fi
+        sed -i "${INSERT_LINE}a\\
+export AGENT_PK=$NEW_PK" "$SHELL_PROFILE"
+      else
+        # No guard found, append normally
+        echo "export AGENT_PK=$NEW_PK" >> "$SHELL_PROFILE"
+      fi
       export AGENT_PK="$NEW_PK"
       echo "  ✓ Agent wallet created: $AGENT_ADDRESS"
       echo "  ✓ Private key saved to $SHELL_PROFILE as \$AGENT_PK"

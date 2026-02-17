@@ -90,12 +90,12 @@ cast balance {AGENT_ADDRESS} --rpc-url https://mainnet.base.org
    - If balance is 0, tell the user the funds haven't arrived yet and to check the transaction
    - If balance is sufficient, proceed
 
-5. Ask the user for a name and description for their onchain agent identity (or suggest defaults)
+5. Ask the user for a name for their onchain agent identity (or suggest a default based on their project or username)
 
 6. Mint the ERC-8004 identity NFT:
 ```
 cast send 0x8004A169FB4a3325136EB29fA0ceB6D2e539a432 \
-  "createAgent(string,string)" "{AGENT_NAME}" "{AGENT_DESCRIPTION}" \
+  "register(string)" "{AGENT_NAME}" \
   --rpc-url https://mainnet.base.org \
   --private-key $AGENT_PK
 ```
