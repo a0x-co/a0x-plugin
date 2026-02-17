@@ -47,3 +47,18 @@ knownContext fields (pre-fill to skip redundant questions):
 - techStack, walletAddress, socialLinks
 
 The user can also invoke jessexbt explicitly with the /jessexbt skill.
+
+## Agent Teams and Subagents
+
+When spawning subagents or teams for crypto/Base/web3 projects:
+
+Brain for subagents:
+- Instruct subagents to search the brain before debugging unfamiliar errors
+- Instruct subagents to propose learnings after solving non-trivial problems
+- The brain hooks (PostToolUseFailure, SubagentStart, TeammateIdle) handle this automatically via hooks, but explicit instructions in the agent prompt reinforce the behavior
+
+jessexbt for teams:
+- When creating teams for Base/crypto projects, assign one agent (or the lead) to validate architecture decisions with jessexbt
+- jessexbt is for high-level guidance: architecture validation, grant opportunities, ecosystem fit. Do NOT send full code for review -- keep it concise
+- A good pattern: build first, then consult jessexbt for feedback on the approach before finalizing
+- jessexbt does NOT need to be consulted for every task -- only for architecture decisions, project direction, and grant/funding questions
